@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import matplotlib.pyplot as plt
 
 # Clase empleada para definir la red convolucional de perros y gatos en la práctica 5.2
 class BloqueConvolucional(nn.Module):
@@ -73,5 +74,20 @@ def train_model(model, epochs, train_loader, val_loader, loss_fn, optimizer, dev
         print(f"Epoch [{epoch:02d}/{epochs}], Train Loss: {avg_train_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Train Accuracy: {avg_train_accu:.4f}, Validation Accuracy: {avg_val_accu:.4f}")
 
         history['train_loss'].append(avg_train_loss), history['val_loss'].append(avg_val_loss), history['train_acc'].append(avg_train_accu), history['val_acc'].append(avg_val_accu)
-        print("\n--- Entrenamiento finalizado ---")
+    print("\n--- Entrenamiento finalizado ---")
     return history
+
+def plot_history(history):
+    plt.figure(figsize=(10,4))
+    plt.subplot(1,2,1)
+    plt.plot(history['train_loss'], label='train_loss')
+    plt.plot(history['val_loss'], label='val_loss')
+    plt.legend()
+    plt.title('Pérdida Entrenamiento y Validación')
+
+    plt.subplot(1,2,2)
+    plt.plot(history['train_acc'], label='train_acc')
+    plt.plot(history['val_acc'], label='val_acc')
+    plt.legend()
+    plt.title('Accuracy Entrenamiento y Validación')
+    plt.show()
