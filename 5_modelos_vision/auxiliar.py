@@ -1,0 +1,77 @@
+import torch.nn as nn
+import torch
+
+# Clase empleada para definir la red convolucional de perros y gatos en la práctica 5.2
+class BloqueConvolucional(nn.Module):
+    def __init__(self, in_ch, out_ch, dropout_p):
+        kernel_size = 3
+        super().__init__()
+
+        self.model = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, kernel_size),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.MaxPool2d(kernel_size=(2, 2))
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
+# Funciones para entrenamiento y evaluación empleadas en la práctica 5.2
+def binary_accuracy(logits, y, threshold = 0.5):
+    probs = torch.sigmoid(logits)
+    preds = (probs >= threshold)
+    correct = (preds == y)
+    return correct.sum().item() / correct.shape[0]
+
+def evaluate(model, loader, loss_fn, device='cuda'):
+    model.eval() 
+    loss_acum, accu_acum = 0, 0
+    with torch.no_grad(): 
+        for x, y in loader:
+            # Enviamos los datos la GPU. Y aprovechamos para convertir
+            # la etiqueta a float (por defecto, ImageFolder devuelve int64 para las labels)
+            x, y = x.to(device), y.float().to(device) # <-- Enviamos datos a la GPU
+            preds = model(x).squeeze()
+            loss = loss_fn(preds, y)
+            loss_acum += loss.item()
+            accu_acum += binary_accuracy(preds,y)
+    avg_val_loss = loss_acum / len(loader)        
+    avg_val_accu = accu_acum / len(loader)   
+    return avg_val_loss, avg_val_accu
+
+def train_model(model, epochs, train_loader, val_loader, loss_fn, optimizer, device='cuda'):  
+    history = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []} 
+    # --- Bucle principal ---
+    for epoch in range(epochs):
+        # --- Fase de Entrenamiento ---
+        model.train() 
+        loss_acum, accu_acum = 0, 0            
+        for x, y in train_loader:
+            # Enviamos los datos la GPU. Y aprovechamos para convertir
+            # la etiqueta a float (por defecto, ImageFolder devuelve int64 para las labels)
+            x, y = x.to(device), y.float().to(device) # <-- Enviamos datos a la GPU
+            optimizer.zero_grad()
+            preds = model(x)
+            preds = preds.squeeze()  
+            loss = loss_fn(preds, y)
+            loss.backward()
+            optimizer.step()
+
+            # calculamos métricas
+            loss_acum += loss.item()
+            accu_acum += binary_accuracy(preds,y)                          
+    
+        avg_train_loss = loss_acum / len(train_loader)        
+        avg_train_accu = accu_acum / len(train_loader)
+
+        # --- Fase de Validación ---
+        avg_val_loss, avg_val_accu = evaluate(model,val_loader,loss_fn)        
+        
+        print(f"Epoch [{epoch:02d}/{epochs}], Train Loss: {avg_train_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Train Accuracy: {avg_train_accu:.4f}, Validation Accuracy: {avg_val_accu:.4f}")
+
+        history['train_loss'].append(avg_train_loss), history['val_loss'].append(avg_val_loss), history['train_acc'].append(avg_train_accu), history['val_acc'].append(avg_val_accu)
+        print("\n--- Entrenamiento finalizado ---")
+    return history
