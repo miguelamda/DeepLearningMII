@@ -13,8 +13,7 @@ __Cursos de referencia__:
  * [Machine Learning, Andrew Ng (Coursera and Standford)](https://es.coursera.org/learn/machine-learning)
  * [Deep Learning 2018/19, Fernando Sancho](https://github.com/fsancho/DL)
 
-Los Notebooks de las prácticas están basados en las siguientes versiones:
-* PyTorch 2.4
+Los Notebooks de las prácticas fue desarrollado con PyTorch 2.9, CUDA 12.1, y Python 3.9. 
 
 __Important note__: I do not own the copyright of the images employed in the slides and the Jupyter notebooks. 
 
